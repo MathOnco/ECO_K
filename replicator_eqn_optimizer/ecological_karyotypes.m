@@ -1,5 +1,5 @@
-function finalM = replicator_eqn_optimizer(samples, M, lb, ub)
-% replicator_eqn_optimizer: Iteratively optimize the payoff matrix M by removing non-significant interactions.
+function finalM = ecological_karyotypes(samples, M, lb, ub)
+% ECO-K: Iteratively optimize the payoff matrix M by removing non-significant interactions.
 % This function implements the optimization routine described in the Methods section.
 % It minimizes the negative log-likelihood while using AIC/BIC criteria to decide on removing interactions.
 
@@ -27,7 +27,7 @@ while sum(M(:)~=0) > 2 && iteration_count < max_iterations
     
     % Optimize the current set of non-zero parameters using the likelihood function
     problem = createOptimProblem('fmincon', 'objective', ...
-        @(params) reo_likelihood_function(params, samples, M_copy, []), ...
+        @(params) likelihood_function(params, samples, M_copy, []), ...
         'x0', M_copy(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
     rs = RandomStartPointSet('NumStartPoints', nsp);
     points = list(rs, problem);
@@ -35,7 +35,7 @@ while sum(M(:)~=0) > 2 && iteration_count < max_iterations
     
     % Calculate AIC and BIC for the current model (see Methods for the log-likelihood model)
     days = unique([samples{2,:}]);
-    [AIC_all, BIC_all] = reo_calculate_AICBIC(negative_log_likelihood, estimated_params, days);
+    [AIC_all, BIC_all] = calculate_AICBIC(negative_log_likelihood, estimated_params, days);
     
     % Update final model if current BIC is lower
     if BIC_all < finalBIC
@@ -58,11 +58,11 @@ while sum(M(:)~=0) > 2 && iteration_count < max_iterations
 
         % Update the optimization problem with the new set of parameters after removal
         problem = createOptimProblem('fmincon', 'objective', ...
-            @(params) reo_likelihood_function(params, samples, M_copy, []), ...
+            @(params) likelihood_function(params, samples, M_copy, []), ...
             'x0', M_copy(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
         points = list(rs, problem);
         [estimated_params_minus_one, negative_log_likelihood_minus_one] = run(ms, problem, CustomStartPointSet(points));
-        [AIC_allMinusOne(k), BIC_allMinusOne(k)] = reo_calculate_AICBIC(negative_log_likelihood_minus_one, estimated_params_minus_one, days);
+        [AIC_allMinusOne(k), BIC_allMinusOne(k)] = calculate_AICBIC(negative_log_likelihood_minus_one, estimated_params_minus_one, days);
     end
 
     % Identify which parameter removal gives the lowest BIC (and AIC)
