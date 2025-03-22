@@ -1,4 +1,4 @@
-function [hatM_all, num_significant, num_significant2, num_significant3] = reo_bootstrap(finalS, X, beta, ub, lb)
+function [hatM_all, num_significant, num_significant2, num_significant3] = bootstrap_func(finalS, X, beta, ub, lb)
     % REO_BOOTSTRAP performs the bootstrap routine described in Section "Bootstrapping" of the Methods.
     % 
     %   finalS      - Final parameter solution to the replicator equation (defines payoff matrix M).
