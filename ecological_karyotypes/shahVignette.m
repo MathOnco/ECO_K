@@ -172,7 +172,7 @@ for v = 1:length(dirinfo)
             idx = find(M_initial~=0);
 
             problem = createOptimProblem('fmincon', 'objective', ...
-                @(params) reo_likelihood_function(params, samples, M_initial, []), ...
+                @(params) likelihood_function(params, samples, M_initial, []), ...
                 'x0', M_initial(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
             rs = RandomStartPointSet('NumStartPoints', nsp);
             points = list(rs, problem);
@@ -195,7 +195,7 @@ for v = 1:length(dirinfo)
 
             % Re-run optimization with updated bounds to further refine parameter estimates
             problem = createOptimProblem('fmincon', 'objective', ...
-                @(params) reo_likelihood_function(params, samples, finalM, []), ...
+                @(params) likelihood_function(params, samples, finalM, []), ...
                 'x0', finalM(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
             rs = RandomStartPointSet('NumStartPoints', nsp);
             points = list(rs, problem);
@@ -204,7 +204,7 @@ for v = 1:length(dirinfo)
 
             % Calculate model selection criteria (AICc and BIC) using the optimized likelihood,
             % as described in the methods section.
-            [aicc, bic] = reo_calculate_AICBIC(negative_log_likelihood, params, [samples{2,:}]);
+            [aicc, bic] = calculate_AICBIC(negative_log_likelihood, params, [samples{2,:}]);
 
             % Construct the final payoff matrix with the optimized parameters.
             payoff_matrix = zeros(n);
@@ -225,12 +225,12 @@ for v = 1:length(dirinfo)
             exportgraphics(g, savePlace, 'Resolution', 300);
 
             % Plot solution of the replicator equation and compute error between predicted and observed frequencies
-            error = reo_plotResults(payoff_matrix, samples, OUTDIR, dirinfo(v).name, localDir(l).name, []);
+            error = plotResults(payoff_matrix, samples, OUTDIR, dirinfo(v).name, localDir(l).name, []);
 
             % Run bootstrapping to estimate confidence in the interactions (model robustness),
             % as described in the methods section.
             num_bootstrap = 50;
-            [bootstrap_estimates, num_significant,num_significant2,num_significant3] = reo_bootstrap(payoff_matrix, samples, num_bootstrap, ub, lb);
+            [bootstrap_estimates, num_significant,num_significant2,num_significant3] = bootstrap_func(payoff_matrix, samples, num_bootstrap, ub, lb);
 
             % Gather and store additional output results for each replicate
             AIC = nan(size(samples,2),1);
