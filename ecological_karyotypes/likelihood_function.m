@@ -1,7 +1,7 @@
 % Combined likelihood function
 function negative_log_likelihood = likelihood_function(params, samples, M, solMat)
 negative_log_likelihood = 0;
-OUTDIR = '../../Results/shahDataFits/';
+OUTDIR = 'Results/';
 for p = 1:size(samples, 2)
     days = samples{2, p};
     X = samples{1, p};  % observed clone frequencies (X)
@@ -13,7 +13,7 @@ for p = 1:size(samples, 2)
         % Remove 'Origin-' prefix from origin_ID if provided
         if ~isempty(origin_ID)
             originWithoutPrefix = strrep(origin_ID, 'Origin-', '');
-            matFileName = [OUTDIR, 'clone_colors_', originWithoutPrefix, '.mat'];
+            matFileName = ['color_files/clone_colors_', originWithoutPrefix, '.mat'];
         else
             matFileName = '';
         end
@@ -37,7 +37,7 @@ for p = 1:size(samples, 2)
 
         % Calculate the new column such that each row sums to 1
         additional_column = 1 - sum(x_pred, 2);
-        referenceClone = readtable(['../../Data/shahData/referenceClones/' samples{5} '_reference_clone.txt'], 'Delimiter', '\t');
+        referenceClone = readtable(['fitCloneOutput/referenceClones/' samples{5} '_reference_clone.txt'], 'Delimiter', '\t');
         referenceClone = referenceClone.Removed_Clone + 1;
         x_pred = [x_pred(:, 1:referenceClone-1), additional_column, x_pred(:, referenceClone:end)];
 
@@ -66,7 +66,7 @@ for p = 1:size(samples, 2)
 
         g = gcf;
         imageSaveName = [samples{5} '_Replicate_' num2str(p) '_fitCloneModelFit.png'];
-        savePlace = ['../../Results/shahDataFits/' imageSaveName];
+        savePlace = ['Results/fitClonePlots/' imageSaveName];
         exportgraphics(g, savePlace, 'Resolution', 300);
         % Find the closest values in t to days and use the indices to index x_pred
         closest_indices = zeros(length(days), 1);

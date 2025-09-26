@@ -74,34 +74,34 @@ for v = 1:length(dirinfo)
             % Process replicates
             for m = 1:length(replicateDir)
                 p = [replicatePath '/' replicateDir(m).name];
-                % if v ==1 || v==3
-                %     modified_path = strrep(p, 'paths', 'fitCloneOutput');
-                %     modified_path = strrep(modified_path, 'cloneFreqs.csv', 'infer_x.tsv');
-                %     data_table = readtable(modified_path, 'FileType', 'text', 'Delimiter', '\t');
-                %     data_table = removevars(data_table, {'Var1', 'np'});
-                %     % Multiply the entries in the 'time' column by 500
-                %     data_table.time = data_table.time * 500;
-                %     % Extract unique time points
-                %     time_vector = unique(data_table.time);
-                %     % Extract unique clone IDs
-                %     cloneIDs = unique(data_table.K);
-                %     % Initialize the solution matrix
-                %     solution_matrix = zeros(length(time_vector), length(cloneIDs));
-                %     % Fill the solution matrix with clonal frequencies
-                %     for i = 1:length(cloneIDs)
-                %         cloneID = cloneIDs(i);
-                %         for j = 1:length(time_vector)
-                %             time_point = time_vector(j);
-                %             % Find the clonal frequency for the current clone at the current time point
-                %             idx = find(data_table.K == cloneID & data_table.time == time_point);
-                %             if ~isempty(idx)
-                %                 % Assuming there is only one matching row, pick the first one
-                %                 solution_matrix(j, i) = data_table.X(idx(1));
-                %             end
-                %         end
-                %     end
-                %     solMat=[solMat {solution_matrix; time_vector}];
-                % end
+                if v ==1 || v==3
+                    modified_path = strrep(p, 'paths', 'fitCloneOutput');
+                    modified_path = strrep(modified_path, 'cloneFreqs.csv', 'infer_x.tsv');
+                    data_table = readtable(modified_path, 'FileType', 'text', 'Delimiter', '\t');
+                    data_table = removevars(data_table, {'Var1', 'np'});
+                    % Multiply the entries in the 'time' column by 500
+                    data_table.time = data_table.time * 500;
+                    % Extract unique time points
+                    time_vector = unique(data_table.time);
+                    % Extract unique clone IDs
+                    cloneIDs = unique(data_table.K);
+                    % Initialize the solution matrix
+                    solution_matrix = zeros(length(time_vector), length(cloneIDs));
+                    % Fill the solution matrix with clonal frequencies
+                    for i = 1:length(cloneIDs)
+                        cloneID = cloneIDs(i);
+                        for j = 1:length(time_vector)
+                            time_point = time_vector(j);
+                            % Find the clonal frequency for the current clone at the current time point
+                            idx = find(data_table.K == cloneID & data_table.time == time_point);
+                            if ~isempty(idx)
+                                % Assuming there is only one matching row, pick the first one
+                                solution_matrix(j, i) = data_table.X(idx(1));
+                            end
+                        end
+                    end
+                    solMat=[solMat {solution_matrix; time_vector}];
+                end
                 inputTable = readtable(p, 'ReadRowNames', 0);
                 cloneIDs = table2array(inputTable(:, 1));
                 replicateID = inputTable.replicateID(1);
@@ -124,7 +124,7 @@ for v = 1:length(dirinfo)
             fitclone_aicc = NaN(size(samples,2),1);
             fitclone_bic = NaN(size(samples,2),1);
             if ~isempty(solMat)
-                fcLikelihood=ikelihood_function(0,samples,0,solMat);
+                fcLikelihood=likelihood_function(0,samples,0,solMat);
                 for p=1:size(samples,2)
                     [fitclone_aicc(p), fitclone_bic(p)] = calculate_AICBIC(fcLikelihood, ones(2*size(samples{1, 1}, 1)-1,1), samples{2,p});
                 end
@@ -269,7 +269,7 @@ for v = 1:length(dirinfo)
             [error, combinationAvgFitness] = plotResults(payoff_matrix, samples, OUTDIR, dirinfo(v).name, localDir(l).name, []);
 
             % Run bootstrapping
-            num_bootstrap = 10;
+            num_bootstrap = 1000;
 
             ub = ub_M;
             lb = lb_M;
