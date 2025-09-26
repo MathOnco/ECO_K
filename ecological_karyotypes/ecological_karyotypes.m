@@ -1,94 +1,172 @@
-function finalM = ecological_karyotypes(samples, M, lb, ub)
-% ECO-K: Iteratively optimize the payoff matrix M by removing non-significant interactions.
-% This function implements the optimization routine described in the Methods section.
-% It minimizes the negative log-likelihood while using AIC/BIC criteria to decide on removing interactions.
+function [finalM, finalBIC] = ecological_karyotypes(samples, M_initial, lb_M, ub_M, beam_width)
+% Performs model selection using a Beam Search algorithm to make it less greedy.
+% Instead of following the single best path, it explores the 'beam_width' best paths at each step.
 
-% Step 1: Create optimization problem and set up all options
-nsp = 80; % number of start points used in optimizer problem
-opts = optimoptions(@fmincon, 'Algorithm', 'sqp');
-% opts = optimoptions(@fmincon, 'Algorithm', 'interior-point'); % alternative algorithm (commented out)
-ms = MultiStart('UseParallel', true);
-ms.Display = 'off';
+%% --- Step 1: Initialization ---
+fprintf('Initializing Beam Search with a beam width of %d...\n', beam_width);
 
-% Initialize records for BIC and AIC during the iterative optimization process
-BIC_record = nan(numel(M), 2); % [BIC value, index removed]
-AIC_record = nan(numel(M), 2); % [AIC value, index removed]
-finalBIC = inf;
-finalAIC = inf;
-finalM = M;
-max_iterations = length(M(M~=0)); % Maximum iterations based on number of non-zero parameters
+% Optimization settings (reused from previous script)
+nsp = 80 ;
+opts = optimoptions(@fmincon, 'Algorithm', 'sqp', 'Display', 'off');
+ms = MultiStart('UseParallel', true, 'Display', 'off');
+
+% --- Initialize the Overall Best Model Tracker ---
+% This struct will hold the single best model found across all paths and iterations.
+best_overall_model.M = M_initial;
+best_overall_model.BIC = inf;
+
+% --- Create the Initial Beam ---
+% The search starts with a single "beam" containing the full, initial model.
+% A beam is a struct array where each element represents a candidate model.
+initial_model.M = M_initial;
+[~, initial_model.BIC, ~] = optimize_and_get_bic(initial_model, samples, lb_M, ub_M, ms, opts, nsp);
+
+current_beam = initial_model;
+best_overall_model = initial_model; % The initial model is the best one so far
+
+fprintf('Initial full model BIC: %f\n', initial_model.BIC);
+
+% --- Loop Control ---
+max_iterations = nnz(M_initial);
+min_params = 3; % Stop when models have 3 or fewer parameters
 iteration_count = 0;
 
-% Iteratively remove interactions until no further improvement in BIC is possible
-while sum(M(:)~=0) > 2 && iteration_count < max_iterations
+%% --- Step 2: Main Beam Search Loop ---
+while iteration_count < max_iterations
     iteration_count = iteration_count + 1;
-    M_copy = M;
-    idx = find(M_copy ~= 0);
+    fprintf('\n================== Iteration %d ==================\n', iteration_count);
     
-    % Optimize the current set of non-zero parameters using the likelihood function
+    % --- Expansion Step: Generate all possible child models from the current beam ---
+    child_candidates = {}; % Use a cell array to collect all children
+    
+    for i = 1:length(current_beam)
+        parent_model = current_beam(i);
+        
+        % Find all valid parameters to remove from this parent
+        valid_indices_m = find(parent_model.M ~= 0);
+        
+        % Stop expanding a path if it has too few parameters
+        if length(valid_indices_m) <= min_params
+            continue;
+        end
+        
+        % Test removing each M parameter
+        for k = 1:length(valid_indices_m)
+            child_model = parent_model;
+            child_model.M(valid_indices_m(k)) = 0;
+            [~, child_model.BIC, ~] = optimize_and_get_bic(child_model, samples, lb_M, ub_M, ms, opts, nsp);
+            
+
+            % Store how this child was created  <-- ADD THIS LINE
+            child_model.description = sprintf('Parent %d: Removed M at index %d', i, valid_indices_m(k));
+            
+            child_candidates{end+1} = child_model;
+        end
+        
+    end
+    
+    if isempty(child_candidates)
+        fprintf('No further simplifications possible. Terminating search.\n');
+        break;
+    end
+    
+    % --- Pruning Step: Select the top 'k' candidates to form the next beam ---
+    % Convert cell array to a struct array for easy sorting
+    candidate_structs = [child_candidates{:}];
+    
+    % Get all unique models to avoid redundant paths in the beam
+    [~, unique_indices] = unique(arrayfun(@(s) gencode(s.M), candidate_structs, 'UniformOutput', false));
+    unique_candidates = candidate_structs(unique_indices);
+    
+    % Sort all unique candidates by their BIC score
+    [~, sort_order] = sort([unique_candidates.BIC]);
+    sorted_candidates = unique_candidates(sort_order);
+    
+    % The new beam is the top 'beam_width' models from the sorted list
+    num_to_keep = min(beam_width, length(sorted_candidates));
+    next_beam = sorted_candidates(1:num_to_keep);
+    
+    % --- Update the overall best model tracker FIRST ---
+    if ~isempty(next_beam) && (next_beam(1).BIC < best_overall_model.BIC)
+        best_overall_model = next_beam(1);
+    end
+
+    % --- MODIFIED: More detailed printout at the end of each iteration ---
+    % fprintf('\n================== Iteration %d Summary ==================\n', iteration_count);
+    % fprintf('Parent models (start of iteration):\n');
+    % for p_idx = 1:length(current_beam)
+    %     fprintf('  Parent %d -> BIC: %f\n', p_idx, current_beam(p_idx).BIC);
+    % end
+    % fprintf('\n--- BIC Test Results for This Iteration (%d unique children generated) ---\n', length(sorted_candidates));
+    % % Loop through and display the results for all generated models
+    % for k = 1:length(sorted_candidates)
+    %     candidate = sorted_candidates(k);
+    %     fprintf('Test: %-35s -> BIC: %f', candidate.description, candidate.BIC);
+    %     if k <= num_to_keep
+    %         fprintf('  <-- SELECTED for next beam\n');
+    %     else
+    %         fprintf('\n');
+    %     end
+    % end
+    % fprintf('--------------------------------------------------------------------\n\n');
+    % fprintf('State for NEXT iteration (new beam with %d model(s)):\n', length(next_beam));
+    % for b_idx = 1:length(next_beam)
+    %     fprintf('--- Beam Model %d (BIC: %f) ---\n', b_idx, next_beam(b_idx).BIC);
+    %     disp(next_beam(b_idx).M);
+    % end
+    % fprintf('\nBest model found so far (lowest BIC):\n');
+    % disp('finalM matrix:');
+    % disp(best_overall_model.M);
+    % fprintf('Lowest BIC: %f\n', best_overall_model.BIC);
+    % fprintf('==================================================================\n\n');
+    
+    current_beam = next_beam;
+    
+    % fprintf('Generated %d unique child models. New beam has %d models.\n', length(unique_candidates), length(current_beam));
+    % fprintf('Best BIC in current beam: %f\n', current_beam(1).BIC);
+    % fprintf('Overall best BIC found so far: %f\n', best_overall_model.BIC);
+
+    1+1;
+
+end
+
+%% --- Step 3: Finalization ---
+fprintf('\n================== Search Complete ==================\n');
+fprintf('The best model found has a BIC of: %f\n', best_overall_model.BIC);
+
+finalM = best_overall_model.M;
+finalBIC = best_overall_model.BIC;
+
+end
+
+
+% --- Helper function for optimization ---
+function [nll, bic, estimated_params] = optimize_and_get_bic(model, samples, lb_M, ub_M, ms, opts, nsp)
+    % This helper runs the optimization and BIC calculation for a given model structure.
+    M_copy = model.M;
+    
+    idx_m = find(M_copy ~= 0);
+    x0 = M_copy(idx_m);
+    
+    
+    lb = lb_M(idx_m);
+    ub = ub_M(idx_m);
+    
     problem = createOptimProblem('fmincon', 'objective', ...
         @(params) likelihood_function(params, samples, M_copy, []), ...
-        'x0', M_copy(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
+        'x0', x0, 'lb', lb, 'ub', ub, 'options', opts);
+    
     rs = RandomStartPointSet('NumStartPoints', nsp);
     points = list(rs, problem);
-    [estimated_params, negative_log_likelihood] = run(ms, problem, CustomStartPointSet(points));
+    [estimated_params, nll] = run(ms, problem, CustomStartPointSet(points));
     
-    % Calculate AIC and BIC for the current model (see Methods for the log-likelihood model)
     days = unique([samples{2,:}]);
-    [AIC_all, BIC_all] = calculate_AICBIC(negative_log_likelihood, estimated_params, days);
-    
-    % Update final model if current BIC is lower
-    if BIC_all < finalBIC
-        finalBIC = BIC_all;
-        finalAIC = AIC_all;
-        finalM = M;
-    end
-
-    % Initialize arrays to store AIC and BIC for models with one parameter removed
-    BIC_allMinusOne = inf(1, nnz(M)); % For each non-zero parameter, compute BIC after its removal
-    AIC_allMinusOne = inf(1, nnz(M));
-
-    valid_indices = find(M ~= 0);
-    % Loop over each non-zero parameter to test removal
-    for k = 1:length(valid_indices)
-        i = valid_indices(k);
-        M_copy = M;
-        M_copy(i) = 0; % Set one interaction parameter to zero
-        idx = find(M_copy ~= 0);
-
-        % Update the optimization problem with the new set of parameters after removal
-        problem = createOptimProblem('fmincon', 'objective', ...
-            @(params) likelihood_function(params, samples, M_copy, []), ...
-            'x0', M_copy(idx), 'lb', lb(idx), 'ub', ub(idx), 'options', opts);
-        points = list(rs, problem);
-        [estimated_params_minus_one, negative_log_likelihood_minus_one] = run(ms, problem, CustomStartPointSet(points));
-        [AIC_allMinusOne(k), BIC_allMinusOne(k)] = calculate_AICBIC(negative_log_likelihood_minus_one, estimated_params_minus_one, days);
-    end
-
-    % Identify which parameter removal gives the lowest BIC (and AIC)
-    [min_BIC, min_index] = min(BIC_allMinusOne);
-    [min_AIC, min_AIC_index] = min(AIC_allMinusOne);
-
-    ia = valid_indices(min_index); % Actual index in M for the lowest BIC when removed
-    ix = valid_indices(min_AIC_index); % Actual index in M for the lowest AIC when removed
-
-    % If removal of the parameter improves BIC, update M by permanently removing that parameter.
-    if min_BIC < finalBIC
-        finalBIC = min_BIC;
-        finalAIC = min_AIC;
-        M(ia) = 0;
-        finalM = M;
-    else
-        % Even if removal does not lower BIC, remove the parameter (iterative removal continues)
-        M(ia) = 0;
-    end
-    % Record the BIC and AIC for tracking optimization progress
-    BIC_record(sum(M(:) == 0), :) = [min_BIC, ia];
-    AIC_record(sum(M(:) == 0), :) = [min_AIC, ix];
+    [~, bic] = calculate_AICBIC(nll, estimated_params, days);
 end
 
-if iteration_count >= max_iterations
-    warning('Max iterations reached, exiting loop to prevent infinite run');
-end
-
+% --- Helper function to generate a unique code for a model ---
+function code = gencode(M)
+    % Creates a unique string representation of a model's structure for finding unique models.
+    M_binary = M(:) ~= 0;
+    code = num2str(M_binary');
 end
