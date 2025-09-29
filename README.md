@@ -40,8 +40,6 @@ samples = {freqs_noisy; t_span'; 'Hawk-Dove'; {'Hawk', 'Dove'}}; % {frequencies;
 Next, we'll use the noisy data to infer the four parameters of the 2x2 payoff matrix. We do this by defining an objective function that calls likelihood_function and minimizing it with fmincon.
 
 ```matlab
-% --- 2. Infer the Payoff Matrix Using Model Selection ---
-
 % The ecological_karyotypes function requires an initial matrix, parameter bounds,
 % and a beam width for the search.
 
@@ -49,17 +47,19 @@ Next, we'll use the noisy data to infer the four parameters of the 2x2 payoff ma
 lower_bounds = -5 * ones(2);
 upper_bounds =  5 * ones(2);
 
-% To get a good starting point (M_initial), we can run a quick preliminary
-% optimization on the full model. This provides the algorithm with a sensible
-% set of initial parameter values.
+% To get a good starting point (M_initial), we first generate a data-driven
+% guess using testForFreqDepEffects.
+[M_guess, ~, ~] = testForFreqDepEffects(t_span, freqs_noisy, {'Hawk', 'Dove'}, []);
+initial_guess = M_guess(:); % Vectorize the matrix to use as a starting point
+
+% We then refine this guess with a quick optimization to get a high-quality
+% starting matrix for the beam search.
 structure_matrix = ones(2);
 objective_fun = @(params) likelihood_function(params, samples, structure_matrix, []);
-initial_guess = randn(4, 1); % A random starting point
 preliminary_params = fmincon(objective_fun, initial_guess, [], [], [], [], lower_bounds(:), upper_bounds(:));
 M_initial = reshape(preliminary_params, 2, 2);
 
-% Set the beam width for the search algorithm. This is the number of
-% top candidate models to keep at each step of simplification.
+% Set the beam width for the search algorithm.
 beam_width = 3;
 
 % Run the main function. This may take a moment as it is a comprehensive search.
