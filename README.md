@@ -71,10 +71,13 @@ fprintf('Model selection complete. Best BIC found: %f\n', best_bic);
 ```
 ---
 
-### 3. Comparte Result and Plot Fit to Data
-Finally, display the inferred matrix alongside the true matrix to verify that the fitting procedure successfully recovered the game's parameters.
+### 3. Results
+Finally, plot the fit to data and display the inferred matrix alongside the true matrix to verify that the fitting procedure successfully recovered the game's parameters.
 
 ```matlab
+
+plotResults(payoff_matrix_inferred, samples, [], [], "Sample-1", [])
+
 % --- Display the True and Inferred Matrices ---
 disp('True Payoff Matrix:');
 disp(payoff_matrix_true);
