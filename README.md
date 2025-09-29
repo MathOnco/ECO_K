@@ -31,7 +31,7 @@ freqs_noisy = max(min(freqs_noisy, 1), 0);         % Clamp between 0 and 1
 freqs_noisy = freqs_noisy ./ sum(freqs_noisy, 1);  % Re-normalize
 
 % Package data into the required 'samples' cell array format
-samples = {freqs_noisy; t_span'}; % {frequencies; days}
+samples = {freqs_noisy; t_span', 'Hawk-Dove'}; % {frequencies; days; origin}
 ```
 ---
 
