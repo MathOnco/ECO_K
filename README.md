@@ -72,7 +72,7 @@ fprintf('Model selection complete. Best BIC found: %f\n', best_bic);
 ---
 
 ### 3. Results
-Finally, plot the fit to data and display the inferred matrix alongside the true matrix to verify that the fitting procedure successfully recovered the game's parameters.
+Finally, we'll plot the fit to data and display the inferred matrix alongside the true matrix to verify that the fitting procedure successfully recovered the game's parameters.
 
 ```matlab
 
