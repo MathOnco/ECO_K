@@ -17,7 +17,7 @@ First, we'll define the classic Hawk-Dove payoff matrix, generate an ideal frequ
 ```matlab
 % --- Define the Hawk-Dove Game and Generate Data ---
 % V=Value of resource (2), C=Cost of fighting (10). Assume C > V.
-payoff_matrix_true = [ (2-4)/2 , 2 ; 
+payoff_matrix_true = [ (2-10)/2 , 2 ; 
                        0       , 2/2 ];  % True Matrix A = [-1, 2; 0, 1]
 
 % Solve for the frequency trajectory over 20 time steps
@@ -71,7 +71,7 @@ fprintf('Model selection complete. Best BIC found: %f\n', best_bic);
 ```
 ---
 
-### 3. Compare Results
+### 3. Comparte Result and Plot Fit to Data
 Finally, display the inferred matrix alongside the true matrix to verify that the fitting procedure successfully recovered the game's parameters.
 
 ```matlab
