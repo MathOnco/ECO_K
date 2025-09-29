@@ -114,11 +114,11 @@ MATLAB (R2022b or later)
 
 MATLAB Toolboxes:
 
-Parallel Computing Toolbox
+Global Optimization Toolbox
 
 Optimization Toolbox
 
-Global Optimization Toolbox
+Parallel Computing Toolbox
 
 Statistics and Machine Learning Toolbox
 
