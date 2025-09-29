@@ -16,13 +16,13 @@ First, we'll define the classic Hawk-Dove payoff matrix, generate an ideal frequ
 
 ```matlab
 % --- Define the Hawk-Dove Game and Generate Data ---
-% V=Value of resource (2), C=Cost of fighting (4). Assume C > V.
+% V=Value of resource (2), C=Cost of fighting (10). Assume C > V.
 payoff_matrix_true = [ (2-4)/2 , 2 ; 
                        0       , 2/2 ];  % True Matrix A = [-1, 2; 0, 1]
 
 % Solve for the frequency trajectory over 20 time steps
 t_span = 0:20;
-[t, freqs] = ode45(@(t,x) replicatorEqn(t, x, payoff_matrix_true), t_span, [0.5; 0.5]);
+[t, freqs] = ode45(@(t,x) replicatorEqn(t, x, payoff_matrix_true), t_span, [0.6; 0.4]);
 
 % Transpose and add noise to simulate experimental data
 freqs = freqs'; % Clones in rows, time in columns
