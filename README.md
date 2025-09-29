@@ -18,7 +18,7 @@ First, we'll define the classic Hawk-Dove payoff matrix, generate an ideal frequ
 % --- Define the Hawk-Dove Game and Generate Data ---
 % V=Value of resource (2), C=Cost of fighting (10). Assume C > V.
 payoff_matrix_true = [ (2-10)/2 , 2 ; 
-                       0       , 2/2 ];  % True Matrix A = [-1, 2; 0, 1]
+                       0       , 2/2 ];  % True Matrix A = [-4, 2; 0, 1]
 
 % Solve for the frequency trajectory over 20 time steps
 t_span = 0:20;
@@ -87,7 +87,7 @@ disp(payoff_matrix_inferred);
 
 % Expected Output (values will be close but not exact due to noise):
 % True Payoff Matrix:
-%     -1     2
+%     -4     2
 %      0     1
 %
 % Inferred Payoff Matrix:
