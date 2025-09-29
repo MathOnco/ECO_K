@@ -76,7 +76,7 @@ Finally, plot the fit to data and display the inferred matrix alongside the true
 
 ```matlab
 
-plotResults(payoff_matrix_inferred, samples, [], [], [], [])
+plotResults(payoff_matrix_inferred, samples, [], [], [], []);
 
 % --- Display the True and Inferred Matrices ---
 disp('True Payoff Matrix:');
