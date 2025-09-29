@@ -44,8 +44,8 @@ Next, we'll use the noisy data to infer the four parameters of the 2x2 payoff ma
 % and a beam width for the search.
 
 % Define lower and upper bounds for the payoff matrix elements.
-lower_bounds = -5 * ones(2);
-upper_bounds =  5 * ones(2);
+lower_bounds = -1 * ones(2);
+upper_bounds =  ones(2);
 
 % To get a good starting point (M_initial), we first generate a data-driven
 % guess using testForFreqDepEffects.
