@@ -99,6 +99,8 @@ disp(payoff_matrix_inferred);
 ### Core Functions
 This repository contains a full pipeline for automated analysis, but the Hawk-Dove example above relies on these core components:
 
+```testForFreqDepEffects.m```: Performs a preliminary statistical screen by correlating each clone's growth rate with every other clone's frequency to generate a data-driven initial guess for the interaction matrix.
+
 ```replicatorEqn.m```: Defines the ordinary differential equation (ODE) for the replicator dynamics. This function takes the current population frequencies and a payoff matrix and returns the rate of change for each clone's frequency, forming the core of the evolutionary model.
 
 ```likelihood_function.m```: The objective function for optimization. It uses an ODE solver (which calls ```replicatorEqn.m```) to predict frequency dynamics and computes the model's negative log-likelihood against the observed data.
