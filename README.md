@@ -118,5 +118,7 @@ Parallel Computing Toolbox
 
 Optimization Toolbox
 
+Global Optimization Toolbox
+
 Statistics and Machine Learning Toolbox
 
