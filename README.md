@@ -1,6 +1,6 @@
 # ECO_K
 
-ECO_K is a comprehensive MATLAB toolkit designed to infer frequency-dependent clonal interaction networks from longitudinal population data. It employs an evolutionary game theory framework, modeling clonal dynamics using the replicator equation. The primary output is a **payoff matrix** that quantifies how different karyotype-defined subpopulations promote or inhibit each other's growth, revealing the underlying competitive and cooperative relationships.
+```ECO_K``` is a comprehensive MATLAB toolkit designed to infer frequency-dependent clonal interaction networks from longitudinal population data. It employs an evolutionary game theory framework, modeling clonal dynamics using the replicator equation. The primary output is a **payoff matrix** that quantifies how different karyotype-defined subpopulations promote or inhibit each other's growth, revealing the underlying competitive and cooperative relationships.
 
 The toolkit is particularly suited for analyzing time-series data from biological systems like cancer cell populations, microbial communities, or other evolving systems where clonal frequency is tracked over time.
 
@@ -96,7 +96,9 @@ disp(payoff_matrix_inferred);
 ### Core Functions
 This repository contains a full pipeline for automated analysis, but the Hawk-Dove example above relies on these core components:
 
-```likelihood_function.m```: The objective function used for optimization. It computes the model's negative log-likelihood by comparing data predicted by the replicator equation to the observed data.
+```replicatorEqn.m```: Defines the ordinary differential equation (ODE) for the replicator dynamics. This function takes the current population frequencies and a payoff matrix and returns the rate of change for each clone's frequency, forming the core of the evolutionary model.
+
+```likelihood_function.m```: The objective function for optimization. It uses an ODE solver (which calls ```replicatorEqn.m```) to predict frequency dynamics and computes the model's negative log-likelihood against the observed data.
 
 ```ecological_karyotypes.m```: Implements a Beam Search algorithm to perform model selection and find the interaction matrix with the best BIC score for more complex models.
 
