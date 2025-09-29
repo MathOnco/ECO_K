@@ -84,15 +84,6 @@ disp(payoff_matrix_true);
 
 disp('Inferred Payoff Matrix:');
 disp(payoff_matrix_inferred);
-
-% Expected Output (values will be close but not exact due to noise):
-% True Payoff Matrix:
-%     -4     2
-%      0     1
-%
-% Inferred Payoff Matrix:
-%     -1.0128    2.0049
-%     -0.0065    1.0081
 ```
 ---
 
