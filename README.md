@@ -106,6 +106,13 @@ This repository contains a full pipeline for automated analysis, but the Hawk-Do
 
 ---
 
+### For Complex Datasets
+The example above is ideal for understanding the core fitting mechanism. For analyzing complex, multi-sample experimental datasets, the main automated script ```shahVignette.m``` is recommended. It handles data loading, preprocessing, model selection, and bootstrapping across many samples as described in: 
+
+> Salehi, S., Kabeer, F., Ceglia, N. et al. Clonal fitness inferred from time-series modelling of single-cell cancer genomes. Nature 595, 585–590 (2021). https://doi.org/10.1038/s41586-021-03648-3
+
+---
+
 ### Dependencies
 MATLAB (R2022b or later)
 
@@ -116,11 +123,4 @@ Parallel Computing Toolbox
 Optimization Toolbox
 
 Statistics and Machine Learning Toolbox
-
----
-
-### For Complex Datasets
-The example above is ideal for understanding the core fitting mechanism. For analyzing complex, multi-sample experimental datasets, the main automated script shahVignette.m is recommended. It handles data loading, preprocessing, model selection, and bootstrapping across many samples as described in: 
-
-> Salehi, S., Kabeer, F., Ceglia, N. et al. Clonal fitness inferred from time-series modelling of single-cell cancer genomes. Nature 595, 585–590 (2021). https://doi.org/10.1038/s41586-021-03648-3
 
